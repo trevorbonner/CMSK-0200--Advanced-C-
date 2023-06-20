@@ -12,7 +12,10 @@ namespace Core.Entities
         public abstract CreatureType CreatureType { get; }
         public int CurrentTurn { get; set; }
         public GameBoardCell CurrentPosition { get; set; }
-        public abstract bool CanMove(GameBoardCell cell);
-        public abstract void CanBreed();
+
+        public bool CanBreed()
+        {
+            return CurrentTurn % TurnsTillBreed == 0;
+        }
     }
 }

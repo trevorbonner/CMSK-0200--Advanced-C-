@@ -17,6 +17,16 @@ namespace Core.Entities
             }
         }
 
+        public int TurnsSinceEaten { get; set; }
+
+        public int TurnsTillStarve
+        {
+            get
+            {
+                return 3;
+            }
+        }
+
         public override CreatureType CreatureType
         {
             get
@@ -25,14 +35,9 @@ namespace Core.Entities
             }
         }
 
-        public override void CanBreed()
+        public bool HasStarved()
         {
-            throw new NotImplementedException();
-        }
-
-        public override bool CanMove(GameBoardCell cell)
-        {
-            throw new NotImplementedException();
+            return TurnsSinceEaten > TurnsTillStarve;
         }
     }
 }

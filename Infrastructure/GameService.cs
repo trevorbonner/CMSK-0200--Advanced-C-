@@ -1,40 +1,40 @@
-﻿using Core.Entities;
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Infrastructure
+﻿namespace Infrastructure
 {
     public class GameService
     {
-        public GameService()
+        public GameService(GameBoardService gameBoardService, CreatureService creatureService)
         {
-            CreatureService = new CreatureService();
+            this.creatureService = creatureService;
+            this.gameBoardService = gameBoardService;
         }
 
-        protected CreatureService CreatureService { get; }
-        public GameBoard GameBoard { get; private set; }
+        private CreatureService creatureService { get; }
+        private GameBoardService gameBoardService { get; set; }
         public int Iteration { get; set; }
-
         public bool IsGameOver { get; set; }
 
-        public void StartGame(int x, int y, int preyCount, int predatorCount)
+        public void StartGame(int width, int height, int preyCount, int predatorCount)
         {
-            GameBoard = new GameBoard(x, y);
-            CreatureService.InitializeCreatures(GameBoard, preyCount, predatorCount);
-            GameBoard.GenerateGameBoard();
+            gameBoardService.CreateBoard(width, height);
+            creatureService.InitializeCreatures(preyCount, predatorCount);
+            gameBoardService.GenerateGameBoard();
+            WriteIteration();
         }
 
         public void NextIteration()
         {
             Iteration++;
-            CreatureService.Move();
-            if(CreatureService.IsExtinction())
+            creatureService.Move(0);
+            if(creatureService.IsExtinction())
                 IsGameOver = true;
 
+            WriteIteration();
+        }
+
+        private void WriteIteration()
+        {
+            gameBoardService.GenerateGameBoard();
+            Console.SetCursorPosition(0, gameBoardService.Height + 4);
             Console.WriteLine($"Iteration: {Iteration}");
         }
     }

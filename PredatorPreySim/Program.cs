@@ -25,14 +25,25 @@ namespace PredatorPreySim
             Console.Clear();
             Console.WriteLine("Enter Stop to stop the game");
             Console.WriteLine();
-            var gameService = new GameService();
+
+            var gameService = CreateService();
             gameService.StartGame(20, 20, 100, 5);
+
             string input = string.Empty;
             while (gameService.IsGameOver == false && input.ToLower() != "stop")
             {
                 input = Console.ReadLine() ?? string.Empty;
                 gameService.NextIteration();
             }
+        }
+
+        static GameService CreateService()
+        {
+            var gameboardService = new GameBoardService();
+            var creatureSErvice = new CreatureService(gameboardService);
+            var gameService = new GameService(gameboardService, creatureSErvice);
+
+            return gameService;
         }
     }
 }

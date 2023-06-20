@@ -1,8 +1,8 @@
-﻿namespace Core.Entities
+﻿namespace Core
 {
     public enum Move
     {
-        Up = 1,
+        Up,
         Down,
         Left,
         Right

@@ -23,15 +23,5 @@ namespace Core.Entities
                 return CreatureType.Prey;
             }
         }
-
-        public override void CanBreed()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool CanMove(GameBoardCell cell)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

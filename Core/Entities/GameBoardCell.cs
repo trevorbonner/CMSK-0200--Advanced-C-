@@ -18,31 +18,5 @@
             if (creature != null)
                 creature.CurrentPosition = this;
         }
-
-        public void WriteCell()
-        {
-            if (Creature == null)
-            {
-                Console.Write("-");
-                return;
-            }
-
-            switch (Creature.CreatureType)
-            {
-                case CreatureType.Predator:
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write("X");
-                    break;
-                case CreatureType.Prey:
-                    Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    Console.Write("O");
-                    break;
-                default:
-                    Console.Write("Unknown");
-                    break;
-            }
-
-            Console.ForegroundColor = ConsoleColor.White;
-        }
     }
 }

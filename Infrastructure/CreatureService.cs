@@ -1,9 +1,5 @@
-﻿using Core.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Core;
+using Core.Entities;
 
 namespace Infrastructure
 {
@@ -12,25 +8,26 @@ namespace Infrastructure
         public const int MoveMinValue = 1;
         public const int MoveMaxValue = 5;
 
-        public CreatureService()
+        public CreatureService(GameBoardService gameBoardService)
         {
+            this.gameBoardService = gameBoardService;
             Predators = new List<Predator>();
             Prey = new List<Prey>();
-            Random = new Random();
+            preyToRemove = new List<Prey>();
+            predatorsToRemove = new List<Predator>();
         }
 
-        internal Random Random { get; set; }
         public List<Predator> Predators { get; set; }
         public List<Prey> Prey { get; set; }
-        public GameBoard Board { get; set; }
+        private GameBoardService gameBoardService { get; set; }
+        private List<Predator> predatorsToRemove { get; set; }
+        private List<Prey> preyToRemove { get; set; }
 
-        public void InitializeCreatures(GameBoard board, int preyCount, int predatorCount)
+        public void InitializeCreatures(int preyCount, int predatorCount)
         {
-            Board = board;
-
             for (int i = 0; i < preyCount; i++)
             {
-                var cell = GetRandomEmptyCell();
+                var cell = gameBoardService.GetRandomEmptyCell();
                 var prey = new Prey();
                 Prey.Add(prey);
                 cell.SetCell(prey);
@@ -38,48 +35,96 @@ namespace Infrastructure
 
             for (int i = 0; i < predatorCount; i++)
             {
-                var cell = GetRandomEmptyCell();
+                var cell = gameBoardService.GetRandomEmptyCell();
                 var predator = new Predator();
                 Predators.Add(predator);
                 cell.SetCell(predator);
             }
         }
 
-        public GameBoardCell GetRandomEmptyCell()
+        public void Move(int timeout)
         {
-            bool findEmptyCell = true;
-            GameBoardCell cell = null;
-
-            while (findEmptyCell)
+            var predatorCount = Predators.Count;
+            for(int i = 0; i < predatorCount; i++)
             {
-                var x = Random.Next(Board.Width);
-                var y = Random.Next(Board.Height);
-                if (IsEmptyCell(x, y))
+                Move(Predators[i]);
+                Thread.Sleep(timeout);
+            }
+
+            foreach (var predator in predatorsToRemove)
+            {
+                Predators.Remove(predator);
+            }
+
+            foreach (var prey in preyToRemove)
+            {
+                Prey.Remove(prey);
+            }
+
+            var preyCount = Prey.Count;
+            for (int i = 0; i < preyCount; i++)
+            {
+                Move(Prey[i]);
+                Thread.Sleep(timeout);
+            }
+        }
+
+        private void Move(CreatureBase creature)
+        {
+            creature.CurrentTurn++;
+            var moveCell = gameBoardService.GetRandomDirectionalCell(creature.CurrentPosition);
+            if (moveCell == null)
+                return;
+
+            creature.CurrentPosition.SetCell(null);
+            moveCell.SetCell(creature);
+
+            if (creature.CanBreed())
+            {
+                var freeCell = gameBoardService.GetRandomDirectionalCell(creature.CurrentPosition);
+
+                if (freeCell == null)
+                    return;
+
+                switch (creature.CreatureType)
                 {
-                    findEmptyCell = false;
-                    cell = Board.Cells[x, y];
+                    case CreatureType.Predator:
+                        var predator = new Predator();
+                        freeCell.SetCell(predator);
+                        Predators.Add(predator);
+                        break;
+                    case CreatureType.Prey:
+                        var prey = new Prey();
+                        freeCell.SetCell(prey);
+                        Prey.Add(prey);
+                        break;
+                    default:
+                        break;
                 }
             }
-
-            return cell;
         }
 
-        bool IsEmptyCell(int x, int y)
+        private void Move(Predator predator)
         {
-            return Board.Cells[x, y].Creature == null;
-        }
-
-        public void Move()
-        {
-            foreach(var prey in Prey)
+            //logic to eat
+            var preyCell = gameBoardService.GetCellWithCreatureType(predator.CurrentPosition, CreatureType.Prey);
+            if(preyCell != null)
             {
-                Thread.Sleep(250); //Sleep half a second
+                predator.TurnsSinceEaten = 0;
+                predator.CurrentPosition.SetCell(null);
+                preyToRemove.Add((Prey)preyCell.Creature);
+                preyCell.SetCell(predator);
+            }
+            else
+            {
+                predator.TurnsSinceEaten++;
             }
 
-            foreach(var predator in Predators)
+            Move((CreatureBase)predator);
+            if (predator.HasStarved())
             {
-                Thread.Sleep(250); //Sleep half a second
-
+                predator.CurrentPosition.SetCell(null);
+                predatorsToRemove.Add(predator);
             }
         }
 
